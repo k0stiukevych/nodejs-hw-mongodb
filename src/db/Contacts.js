@@ -36,6 +36,6 @@ const contactSchema = new Schema(
   { versionKey: false, timestamps: true },
 );
 
-const ContactCollection = model('contact', contactSchema);
+const ContactCollection = model('contacts', contactSchema);
 
 export default ContactCollection;
