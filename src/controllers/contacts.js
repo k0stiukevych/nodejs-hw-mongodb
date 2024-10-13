@@ -3,7 +3,12 @@ import parsePaginationParams from '../utils/parsePaginationParams.js';
 import parseSortParams from '../utils/parseSortParams.js';
 import * as contactServices from '../services/contacts.js';
 import { parseContactsFilterParams } from '../utils/filters/parseContactsFilterParams.js';
+import saveFileToUploadDir from '../utils/saveFileToUploadDir.js';
+import saveFileToCloudinary from '../utils/saveFileToCloudinary.js';
+import { env } from '../utils/env.js';
 import { sortFields } from '../db/Contacts.js';
+
+const enableCloudinary = env('ENABLE_CLOUDINARY');
 
 export const getAllContactsController = async (req, res) => {
   const { perPage, page } = parsePaginationParams(req.query);
@@ -42,20 +47,34 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const addContactController = async (req, res) => {
+  let poster;
+  if (req.file) {
+    if (enableCloudinary === 'true') {
+      poster = await saveFileToCloudinary(req.file, 'posters');
+    } else {
+      poster = await saveFileToUploadDir(req.file);
+    }
+  }
+
   const { _id: userId } = req.user;
-  const data = await contactServices.createContact({ ...req.body, userId });
+  const data = await contactServices.createContact({
+    ...req.body,
+    userId,
+    poster,
+  });
 
   res.status(201).json({
     status: 201,
-    message: 'Contact add successfully',
+    message: 'Movie add successfully',
     data,
   });
 };
 
 export const upsertContactController = async (req, res) => {
   const { id } = req.params;
+  const { _id: userId } = req.user;
   const { isNew, data } = await contactServices.updateContact(
-    { _id: id },
+    { _id: id, userId },
     req.body,
     { upsert: true },
   );
@@ -71,7 +90,11 @@ export const upsertContactController = async (req, res) => {
 
 export const patchContactController = async (req, res) => {
   const { id } = req.params;
-  const result = await contactServices.updateContact({ _id: id }, req.body);
+  const { _id: userId } = req.user;
+  const result = await contactServices.updateContact(
+    { _id: id, userId },
+    req.body,
+  );
 
   if (!result) {
     throw createHttpError(404, `Contact with id=${id} not found`);
@@ -86,7 +109,8 @@ export const patchContactController = async (req, res) => {
 
 export const deleteContactController = async (req, res) => {
   const { id } = req.params;
-  const data = await contactServices.deleteContact({ _id: id });
+  const { _id: userId } = req.user;
+  const data = await contactServices.deleteContact({ _id: id, userId });
 
   if (!data) {
     throw createHttpError(404, `Contact with id=${id} not found`);

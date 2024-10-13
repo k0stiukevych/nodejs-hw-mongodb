@@ -14,26 +14,41 @@ const contactSchema = new Schema(
       type: String,
       required: true,
     },
-    email: {
-      type: String,
-      required: true,
-    },
     isFavourite: {
       type: Boolean,
       default: false,
       required: true,
     },
+    // contactType:{
+    //     type: String,
+    //     enum: ["personal", "home"],
+    //     required: true,
+    // },
     contactType: {
       type: String,
       enum: contactList,
       required: true,
       default: 'personal',
     },
+
+    poster: {
+      type: String,
+    },
+
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'user',
       required: true,
-    }
+    },
+    // createdAt:{
+    //     type: String,
+    //     match: createdAtRegexp,
+    //     required: true,
+    // },
+    // updatedAt:{
+    //     type: String,
+    //     required: true,
+    // }
   },
   { versionKey: false, timestamps: true },
 );
@@ -55,5 +70,7 @@ export const sortFields = [
   'createdAt',
   'updatedAt',
 ];
+
+// const ContactCollection = model("contact", contactSchemaA);
 
 export default ContactCollection;

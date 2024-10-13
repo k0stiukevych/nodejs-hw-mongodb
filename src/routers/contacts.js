@@ -1,13 +1,10 @@
 import { Router } from 'express';
-
 import * as contactControllers from '../controllers/contacts.js';
-
 import authenticate from '../middlewares/authenticate.js';
 import isValidId from '../middlewares/isValid.js';
-
 import ctrlWrapper from '../utils/ctrlWrapper.js';
 import validateBody from '../utils/validateBody.js';
-
+import upload from '../middlewares/upload.js';
 import {
   contactAddSchema,
   contactPatchSchema,
@@ -28,7 +25,14 @@ contactsRouter.get(
   ctrlWrapper(contactControllers.getContactByIdController),
 );
 
-contactsRouter.post('/', ctrlWrapper(contactControllers.addContactController));
+// contactsRouter.post("/", ctrlWrapper(contactControllers.addContactController));
+
+contactsRouter.post(
+  '/',
+  upload.single('photo'),
+  validateBody(contactAddSchema),
+  ctrlWrapper(contactControllers.addContactController),
+);
 
 contactsRouter.put(
   '/:id',
@@ -39,10 +43,12 @@ contactsRouter.put(
 
 contactsRouter.patch(
   '/:id',
+  upload.single('photo'),
   isValidId,
   validateBody(contactPatchSchema),
   ctrlWrapper(contactControllers.patchContactController),
 );
+// contactsRouter.patch("/:id", isValidId, validateBody(contactPatchSchema),ctrlWrapper(contactControllers.patchContactController));
 
 contactsRouter.delete(
   '/:id',
